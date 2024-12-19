@@ -4,7 +4,7 @@ const Team = require("../models/Team");
 const User = require("../models/User");
 
 teamRouter.post("/create", async (req, res) => {
-  const { teamName, email } = req.body;
+  const { name, email } = req.body;
   try {
     const user = await User.findOne({email});
     if (!user) {
@@ -14,7 +14,7 @@ teamRouter.post("/create", async (req, res) => {
       return res.json({ success: false, message: "You are already in a team." });
     }
     const team = await Team.create({
-      teamName,
+      name,
       leader: user._id,
       members: [user._id],
     });
