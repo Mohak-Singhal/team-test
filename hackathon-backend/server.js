@@ -10,7 +10,9 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({
+  origin: ["http://localhost:5173", "https://team-test-pi.vercel.app"]
+}));
 //middleware
 app.use(express.json())
 app.use("/api/users", userRouter);
