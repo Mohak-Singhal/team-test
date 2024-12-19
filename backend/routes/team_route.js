@@ -3,28 +3,65 @@ const teamRouter = express.Router();
 const Team = require("../models/Team");
 const User = require("../models/User");
 
+// teamRouter.post("/create", async (req, res) => {
+//   const { name, email } = req.body;
+//   try {
+//     const user = await User.findOne({email});
+//     if (!user) {
+//       return res.json({ success: false, message: "User Not Found" });
+//     }
+//     if (user.team) {
+//       return res.json({ success: false, message: "You are already in a team." });
+//     }
+//     const team = await Team.create({
+//       name,
+//       leader: user._id,
+//       members: [user._id],
+//     });
+//     user.team = team._id;
+//     await user.save();
+//     return res.json({ success: true, message: "Team created successfully!", team });
+//   } catch (error) {
+//     return res.json({ success: false, message: "Server error", error: error.message });
+//   }
+// });
 teamRouter.post("/create", async (req, res) => {
   const { name, email } = req.body;
   try {
-    const user = await User.findOne({email});
+    // Check if the user exists
+    const user = await User.findOne({ email });
     if (!user) {
       return res.json({ success: false, message: "User Not Found" });
     }
+
+    // Check if the user is already in a team
     if (user.team) {
       return res.json({ success: false, message: "You are already in a team." });
     }
+
+    // Check if a team with the same name already exists
+    const existingTeam = await Team.findOne({ name });
+    if (existingTeam) {
+      return res.json({ success: false, message: "Team name already taken" });
+    }
+
+    // Create the new team if no existing team with the same name
     const team = await Team.create({
       name,
       leader: user._id,
       members: [user._id],
     });
+
+    // Assign the team to the user
     user.team = team._id;
     await user.save();
+
     return res.json({ success: true, message: "Team created successfully!", team });
   } catch (error) {
     return res.json({ success: false, message: "Server error", error: error.message });
   }
 });
+
 teamRouter.post("/join", async (req, res) => {
   const { teamName, email } = req.body;
   try {
