@@ -7,7 +7,7 @@ const App = () => {
   const [teamName, setTeamName] = useState("");
   const [operation, setOperation] = useState("createUser");
   const [message, setMessage] = useState("");
-  const url = 'https://team-test.onrender.com/'
+  const url = 'https://team-test.onrender.com'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
