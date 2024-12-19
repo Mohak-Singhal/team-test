@@ -22,7 +22,7 @@ const App = () => {
           res = await axios.post(url + "/api/teams/create", { name, email });
           break;
         case "joinTeam":
-          res = await axios.post(url + "/api/teams/join", { name, email });
+          res = await axios.post(url + "/api/teams/join", { teamName, email });
           break;
         case "leaveTeam":
           res = await axios.post(url + "/api/teams/leave", { email });
