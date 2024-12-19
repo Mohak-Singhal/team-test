@@ -38,6 +38,11 @@ teamRouter.post("/create", async (req, res) => {
     if (user.team) {
       return res.json({ success: false, message: "You are already in a team." });
     }
+    const existingTeam = await Team.findOne({ name });
+    if (existingTeam) {
+      return res.json({ success: false, message: "A team with this name already exists." });
+    }
+
 
     // Create the new team if no existing team with the same name
     const team = await Team.create({
