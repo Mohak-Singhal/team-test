@@ -16,7 +16,7 @@ const PublicTeams = () => {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/teams/list");
+        const response = await axios.get(url+"/api/teams/list");
         if (response.data.success) {
           // Filter out only public teams
           const publicTeams = response.data.teams.filter(team => team.visibility === 'public');
