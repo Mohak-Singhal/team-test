@@ -8,13 +8,14 @@ const LeaderLogin = () => {
   const [isLeader, setIsLeader] = useState(false);
   const [team, setTeam] = useState(null);
   const [visibility, setVisibility] = useState("");
+  const url ='https://team-test.onrender.com'
 
   const handleLogin = async () => {
     setLoading(true);
     setMessage(""); // Reset previous messages
 
     try {
-      const response = await axios.post("http://localhost:3000/api/teams/check-leader", {
+      const response = await axios.post(url+"/api/teams/check-leader", {
         email,
       });
 
@@ -38,7 +39,7 @@ const LeaderLogin = () => {
 
   const fetchTeamDetails = async (email) => {
     try {
-      const response = await axios.get("http://localhost:3000/api/teams/list", { params: { email } });
+      const response = await axios.get(url+"/api/teams/list", { params: { email } });
       if (response.data.success) {
         const teamData = response.data.teams[0]; // Assuming the leader has one team
         setTeam(teamData);
@@ -53,7 +54,7 @@ const LeaderLogin = () => {
 
   const updateVisibility = async () => {
     try {
-      const response = await axios.post("http://localhost:3000/api/teams/update-visibility", {
+      const response = await axios.post(url+"/api/teams/update-visibility", {
         teamId: team._id,
         leaderEmail: email,
         visibility,
@@ -70,7 +71,7 @@ const LeaderLogin = () => {
 
   const handleRemoveMember = async (userId) => {
     try {
-      const response = await axios.post("http://localhost:3000/api/teams/remove-member", {
+      const response = await axios.post(url+"/api/teams/remove-member", {
         teamId: team._id,
         userId,
         leaderEmail: email,
@@ -89,7 +90,7 @@ const LeaderLogin = () => {
   const handleRequestAction = async (userId, action) => {
     const endpoint = action === "approve" ? "/approve-request" : "/reject-request";
     try {
-      const response = await axios.post(`http://localhost:3000/api/teams${endpoint}`, {
+      const response = await axios.post(url+`/api/teams${endpoint}`, {
         teamId: team._id,
         userId,
         leaderEmail: email,

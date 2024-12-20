@@ -10,6 +10,7 @@ const PublicTeams = () => {
   const [email, setEmail] = useState(""); // State to store the email input
   const [teamNameToJoin, setTeamNameToJoin] = useState(""); // To store the team name for joining
   const [isModalOpen, setIsModalOpen] = useState(false); // To handle modal visibility
+  const url ='https://team-test.onrender.com'
 
   // Fetch public teams on component mount
   useEffect(() => {
@@ -41,7 +42,7 @@ const PublicTeams = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/api/teams/request-join", {
+      const response = await axios.post(url+"/api/teams/request-join", {
         teamName: teamNameToJoin, // Team name to join
         email: email, // User's email
       });

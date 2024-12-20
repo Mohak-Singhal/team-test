@@ -10,6 +10,7 @@ const Teams = () => {
   });
   const [message, setMessage] = useState(""); // To store success/error message
   const [createdTeam, setCreatedTeam] = useState(null); // To store created team
+  const url ='https://team-test.onrender.com'
 
   // Handle input changes
   const handleChange = (e) => {
@@ -26,7 +27,7 @@ const Teams = () => {
     try {
       // Make a POST request to create a team
       const response = await axios.post(
-        "http://localhost:3000/api/teams/create", 
+        url+"/api/teams/create", 
         teamData
       );
 

@@ -9,6 +9,7 @@ const CreateUser = () => {
   });
   const [message, setMessage] = useState(""); // To store success/error message
   const [createdUser, setCreatedUser] = useState(null); // To store created user
+  const url ='https://team-test.onrender.com'
 
   // Handle input changes
   const handleChange = (e) => {
@@ -25,7 +26,7 @@ const CreateUser = () => {
     try {
       // Make a POST request to create a user
       const response = await axios.post(
-        "http://localhost:3000/api/users/create",
+        url+"/api/users/create",
         userData
       );
 
