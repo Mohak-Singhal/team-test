@@ -1,20 +1,12 @@
-const mongoose=require(`mongoose`)
-const teamSchema =new mongoose.Schema({
-    name:{
-        type:String,
-        required:true,
-        unique:true,
-    },
-    leader:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
-        required:true,
-    },
-    members:[
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:'User',
-        },
-    ],
+const mongoose = require("mongoose");
+
+const teamSchema = new mongoose.Schema({
+  name: { type: String, required: true, unique: true },
+  leader: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  joinRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  visibility: { type: String, enum: ["public", "private"], default: "private" }, 
 });
-module.exports=mongoose.model("Team",teamSchema);
+
+const Team = mongoose.model("Team", teamSchema);
+module.exports = Team;
