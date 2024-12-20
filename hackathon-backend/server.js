@@ -11,7 +11,7 @@ connectDB();
 
 const app = express();
 app.use(cors({
-  origin: ["http://localhost:5173", "https://team-test-pi.vercel.app"]
+  origin: ["http://localhost:5173", "https://team-test-pi.vercel.app","https://team-test-1.onrender.com/"]
 }));
 //middleware
 app.use(express.json())
