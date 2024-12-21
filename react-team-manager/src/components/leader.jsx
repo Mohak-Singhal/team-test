@@ -8,14 +8,16 @@ const LeaderLogin = () => {
   const [isLeader, setIsLeader] = useState(false);
   const [team, setTeam] = useState(null);
   const [visibility, setVisibility] = useState("");
-  const url ='https://team-test.onrender.com'
+  const [showPopup, setShowPopup] = useState(false);  // For the confirmation popup
+  const url = "https://team-test.onrender.com";
+//   const url = "http://localhost:3000";
 
   const handleLogin = async () => {
     setLoading(true);
     setMessage(""); // Reset previous messages
 
     try {
-      const response = await axios.post(url+"/api/teams/check-leader", {
+      const response = await axios.post(url + "/api/teams/check-leader", {
         email,
       });
 
@@ -39,7 +41,7 @@ const LeaderLogin = () => {
 
   const fetchTeamDetails = async (email) => {
     try {
-      const response = await axios.get(url+"/api/teams/list", { params: { email } });
+      const response = await axios.get(url + "/api/teams/list", { params: { email } });
       if (response.data.success) {
         const teamData = response.data.teams[0]; // Assuming the leader has one team
         setTeam(teamData);
@@ -54,7 +56,7 @@ const LeaderLogin = () => {
 
   const updateVisibility = async () => {
     try {
-      const response = await axios.post(url+"/api/teams/update-visibility", {
+      const response = await axios.post(url + "/api/teams/update-visibility", {
         teamId: team._id,
         leaderEmail: email,
         visibility,
@@ -70,8 +72,12 @@ const LeaderLogin = () => {
   };
 
   const handleRemoveMember = async (userId) => {
+    if (team.leaderEmail === email && team.leaderEmail === userId) {
+      alert("You cannot remove yourself as the leader!");
+      return;
+    }
     try {
-      const response = await axios.post(url+"/api/teams/remove-member", {
+      const response = await axios.post(url + "/api/teams/remove-member", {
         teamId: team._id,
         userId,
         leaderEmail: email,
@@ -87,10 +93,28 @@ const LeaderLogin = () => {
     }
   };
 
+  const handleDissolveTeam = async () => {
+    try {
+      const response = await axios.post(url + "/api/teams/leave", { email });
+      if (response.data.success) {
+        setMessage(response.data.message);  // Show success message
+        setTeam(null);  // Reset the team data
+        // Optionally, you can also redirect the user to another page or clear any other state
+      } else {
+        setMessage(response.data.message);  // Show error message if any
+      }
+    } catch (error) {
+      setMessage("Error dissolving team. Please try again.");
+    } finally {
+      setShowPopup(false);  // Close the confirmation popup
+    }
+  };
+  
+
   const handleRequestAction = async (userId, action) => {
     const endpoint = action === "approve" ? "/approve-request" : "/reject-request";
     try {
-      const response = await axios.post(url+`/api/teams${endpoint}`, {
+      const response = await axios.post(url + `/api/teams${endpoint}`, {
         teamId: team._id,
         userId,
         leaderEmail: email,
@@ -166,23 +190,30 @@ const LeaderLogin = () => {
             </button>
           </div>
 
+          {/* Team Leader Section */}
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Leader</h3>
+            <div className="bg-white shadow-md p-4 rounded-lg border border-gray-300 mb-4">
+              <span className="font-semibold text-gray-900">{team?.leader?.name}</span>
+            </div>
+          </div>
+
           {/* Team Members Section */}
           <div className="mb-6">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Team Members</h3>
             <ul className="bg-white shadow-md p-4 rounded-lg border border-gray-300">
-              {team?.members.map((member, index) => (
-                <li
-                  key={member._id}
-                  className="flex justify-between items-center border-b py-2"
-                >
-                  <span className="font-semibold text-gray-900">{index + 1}. {member.name}</span>
-                  <button
-                    className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-                    onClick={() => handleRemoveMember(member._id)}
-                  >
-                    Remove
-                  </button>
-                </li>
+              {team?.members
+                .filter(member => member._id !== team?.leader?._id)  // Filter out leader from members list
+                .map((member, index) => (
+                  <li key={member._id} className="flex justify-between items-center border-b py-2">
+                    <span className="font-semibold text-gray-900">{index + 1}. {member.name}</span>
+                    <button
+                      className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                      onClick={() => handleRemoveMember(member._id)}
+                    >
+                      Remove
+                    </button>
+                  </li>
               ))}
             </ul>
           </div>
@@ -192,10 +223,7 @@ const LeaderLogin = () => {
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Join Requests</h3>
             <ul className="bg-white shadow-md p-4 rounded-lg border border-gray-300">
               {team?.joinRequests.map((request, index) => (
-                <li
-                  key={request._id}
-                  className="flex justify-between items-center border-b py-2"
-                >
+                <li key={request._id} className="flex justify-between items-center border-b py-2">
                   <span className="font-semibold text-gray-900">{index + 1}. {request.name}</span>
                   <div className="flex gap-2">
                     <button
@@ -215,9 +243,41 @@ const LeaderLogin = () => {
               ))}
             </ul>
           </div>
+
+          {/* Dissolve Team Button */}
+          <div className="mt-6">
+            <button
+              className="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              onClick={() => setShowPopup(true)}
+            >
+              Dissolve Team
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Popup */}
+      {showPopup && (
+        <div className="popup">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">Are you sure you want to dissolve the team?</h3>
+            <button
+              className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 mr-4"
+              onClick={handleDissolveTeam}
+            >
+              Yes, dissolve
+            </button>
+            <button
+              className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
+              onClick={() => setShowPopup(false)}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
 };
+
 export default LeaderLogin;

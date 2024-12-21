@@ -169,30 +169,86 @@ teamRouter.post("/create", async (req, res) => {
   }
 });
 
+// teamRouter.get("/list", async (req, res) => {
+//   const { email } = req.query; // Leader's email (optional)
+//   try {
+//     let teams = [];
+
+//     if (email) {
+//       // If a leader's email is provided, fetch all their teams
+//       const leader = await User.findOne({ email });
+//       if (!leader) {
+//         return res.json({ success: false, message: "Leader not found" });
+//       }
+
+//       // Fetch teams where the leader is the owner
+//       teams = await Team.find({ leader: leader._id })
+//         .select("description")
+//         .populate("leader", "name email")
+//         .populate("members", "name email")
+//         .populate("joinRequests", "name email");
+//     } else {
+//       // Fetch only public teams for general users
+//       teams = await Team.find({ visibility: "public" })
+//         .populate("leader", "name email")
+//     }
+
+//     return res.json({ success: true, teams });
+//   } catch (error) {
+//     return res.json({ success: false, message: "Server error", error: error.message });
+//   }
+// });
 teamRouter.get("/list", async (req, res) => {
-  const { email } = req.query; // Leader's email (optional)
+  const { email } = req.query; 
   try {
     let teams = [];
 
     if (email) {
-      // If a leader's email is provided, fetch all their teams
-      const leader = await User.findOne({ email });
-      if (!leader) {
-        return res.json({ success: false, message: "Leader not found" });
+      const user = await User.findOne({ email }).populate("team");
+      
+      if (!user) {
+        return res.json({ success: false, message: "User not found" });
       }
 
-      // Fetch teams where the leader is the owner
-      teams = await Team.find({ leader: leader._id })
-        .populate("leader", "name email")
-        .populate("members", "name email")
-        .populate("joinRequests", "name email");
+      if (user.team) {
+        const team = await Team.findOne({ _id: user.team._id })
+          .populate("members", "name email")
+          .populate("leader", "name email");
+
+        if (!team) {
+          return res.json({ success: false, message: "Team not found" });
+        }
+
+        return res.json({
+          success: true,
+          team: {
+            name: team.name,
+            description: team.description,
+            leader: team.leader.name,
+            members: team.members.map(member => member.name),
+          }
+        });
+      } else {
+        const leader = await User.findOne({ email });
+        if (!leader) {
+          return res.json({ success: false, message: "Leader not found" });
+        }
+
+        teams = await Team.find({ leader: leader._id })
+          .select("description")
+          .populate("leader", "name email")
+          .populate("members", "name email")
+          .populate("joinRequests", "name email");
+
+        return res.json({ success: true, teams });
+      }
     } else {
-      // Fetch only public teams for general users
       teams = await Team.find({ visibility: "public" })
-        .populate("leader", "name email")
+        .populate("leader", "name email");
+
+      return res.json({ success: true, teams });
     }
 
-    return res.json({ success: true, teams });
   } catch (error) {
     return res.json({ success: false, message: "Server error", error: error.message });
   }
@@ -381,6 +437,111 @@ teamRouter.post("/remove-member", async (req, res) => {
     return res.json({ success: false, message: "Server error", error: error.message });
   }
 });
+
+
+teamRouter.post("/leave", async (req, res) => {
+  const { email } = req.body; 
+  try {
+    const user = await User.findOne({ email }).populate("team");
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+    if (!user.team) {
+      return res.json({ success: false, message: "You are not in a Team" });
+    }
+
+    // Find the team the user is a part of using the user's team ID
+    const team = await Team.findOne({ _id: user.team._id });
+    if (!team) {
+      return res.json({ success: false, message: "Team not found" });
+    }
+
+    // Remove user from team members
+    team.members = team.members.filter((member) => member.toString() !== user._id.toString());
+
+    // If the user is the leader, delete the team
+    if (team.leader.toString() === user._id.toString()) {
+      await team.deleteOne();
+      user.team = null;
+      await user.save();
+      return res.json({ success: true, message: "You left and Your Team is Collapsed" });
+    }
+
+    // Save the changes to the team and the user
+    await team.save();
+    user.team = null;
+    await user.save();
+    return res.json({ success: true, message: "You left the Team Successfully" });
+  } catch (error) {
+    return res.json({ success: false, message: `ServerError ${error}`, error: error.message });
+  }
+});
+
+
+teamRouter.get("/user-team", async (req, res) => {
+  const { email } = req.query;
+
+  try {
+    const user = await User.findOne({ email }).populate("team");
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (!user.team) {
+      return res.status(404).json({ success: false, message: "You are not part of a team" });
+    }
+
+    const team = await Team.findOne({ _id: user.team._id })
+      .populate("members", "name email");
+
+    if (!team) {
+      return res.status(404).json({ success: false, message: "Team not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      team: {
+        name: team.name,
+        description: team.description,
+        members: team.members.map(member => member.name),
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: `Server error: ${error.message}` });
+  }
+});
+
+
+
+
+teamRouter.post('/update-description', async (req, res) => {
+  const { teamId, newDescription, leaderEmail } = req.body;
+  
+  try {
+    // Find the team by ID
+    const team = await Team.findById(teamId);
+    
+    if (team) {
+      // Check if the logged-in user is the team leader
+      if (team.leaderEmail === leaderEmail) {
+        team.description = newDescription; // Update the description
+        await team.save(); // Save the updated team
+        res.json({ success: true, message: 'Team description updated successfully.' });
+      } else {
+        res.json({ success: false, message: 'Only the team leader can update the description.' });
+      }
+    } else {
+      res.json({ success: false, message: 'Team not found.' });
+    }
+  } catch (error) {
+    res.json({ success: false, message: 'Error updating team description.' });
+  }
+});
+
+
 
 module.exports = teamRouter;
 
