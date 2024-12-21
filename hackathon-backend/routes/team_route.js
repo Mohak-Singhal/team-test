@@ -263,11 +263,12 @@ teamRouter.get("/list", async (req, res) => {
         .populate("leader", "name email")
         .populate("members", "name email")
         .populate("joinRequests", "name email")
-        .select("name"); 
+        .select("name description") 
     } else {
       // Fetch only public teams for general users
       teams = await Team.find({ visibility: "public" })
         .populate("leader", "name email")
+        .select("name description visibility"); 
     }
 
     return res.json({ success: true, teams });
@@ -537,27 +538,30 @@ teamRouter.get("/user-team", async (req, res) => {
   }
 });
 
-teamRouter.post('/update-description', async (req, res) => {
-  const { teamId, newDescription, leaderEmail } = req.body;
-  
+teamRouter.post("/update-description", async (req, res) => {
+  const { teamId, leaderEmail, description } = req.body;
   try {
-    // Find the team by ID
-    const team = await Team.findById(teamId);
-    
-    if (team) {
-      // Check if the logged-in user is the team leader
-      if (team.leaderEmail === leaderEmail) {
-        team.description = newDescription; // Update the description
-        await team.save(); // Save the updated team
-        res.json({ success: true, message: 'Team description updated successfully.' });
-      } else {
-        res.json({ success: false, message: 'Only the team leader can update the description.' });
-      }
-    } else {
-      res.json({ success: false, message: 'Team not found.' });
+    const leader = await User.findOne({ email: leaderEmail });
+    if (!leader) {
+      return res.json({ success: false, message: "Leader not found" });
     }
+
+    const team = await Team.findById(teamId);
+    if (!team) {
+      return res.json({ success: false, message: "Team not found" });
+    }
+
+    // Ensure only the leader can update the description
+    if (team.leader.toString() !== leader._id.toString()) {
+      return res.json({ success: false, message: "You are not the leader of this team" });
+    }
+
+    team.description = description;
+    await team.save();
+
+    return res.json({ success: true, message: "Description updated successfully" });
   } catch (error) {
-    res.json({ success: false, message: 'Error updating team description.' });
+    return res.json({ success: false, message: "Error updating description", error: error.message });
   }
 });
 

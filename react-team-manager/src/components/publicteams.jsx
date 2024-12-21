@@ -10,16 +10,18 @@ const PublicTeams = () => {
   const [email, setEmail] = useState(""); // State to store the email input
   const [teamNameToJoin, setTeamNameToJoin] = useState(""); // To store the team name for joining
   const [isModalOpen, setIsModalOpen] = useState(false); // To handle modal visibility
-  const url ='https://team-test.onrender.com'
-
+  const url = "https://team-test.onrender.com";
+// const url = 'http://localhost:3000';
   // Fetch public teams on component mount
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await axios.get(url+"/api/teams/list");
+        const response = await axios.get(url + "/api/teams/list");
         if (response.data.success) {
           // Filter out only public teams
-          const publicTeams = response.data.teams.filter(team => team.visibility === 'public');
+          const publicTeams = response.data.teams.filter(
+            (team) => team.visibility === "public"
+          );
           setTeams(publicTeams);
         } else {
           setError(response.data.message);
@@ -42,7 +44,7 @@ const PublicTeams = () => {
     }
 
     try {
-      const response = await axios.post(url+"/api/teams/request-join", {
+      const response = await axios.post(url + "/api/teams/request-join", {
         teamName: teamNameToJoin, // Team name to join
         email: email, // User's email
       });
@@ -82,17 +84,8 @@ const PublicTeams = () => {
             >
               <h3 className="text-xl font-semibold text-blue-600">{team.name}</h3>
               <p className="mt-2 text-gray-600">Leader: {team.leader.name}</p>
+              <p className="mt-2 text-gray-600">Description: {team.description}</p>
               <p className="text-gray-600">Visibility: {team.visibility}</p>
-
-              {/* Display team members */}
-              <div className="mt-4">
-                <h4 className="font-semibold">Team Members:</h4>
-                <ul className="list-disc pl-5 mt-1">
-                  {team.members.map((member) => (
-                    <li key={member._id} className="text-gray-600">{member.name}</li>
-                  ))}
-                </ul>
-              </div>
 
               {/* Show button to join if user is not in the team already */}
               <button
