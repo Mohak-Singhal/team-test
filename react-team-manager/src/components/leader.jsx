@@ -10,20 +10,47 @@ const LeaderLogin = () => {
   const [visibility, setVisibility] = useState("");
   const [description, setDescription] = useState(""); // For the team description
   const [showPopup, setShowPopup] = useState(false);
+  const [showAddMemberPopup, setShowAddMemberPopup] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState("");
 
-  const url = 'https://team-test.onrender.com'; 
-// const url = 'http://localhost:3000'
+  //   const url = "https://team-test.onrender.com";
+  const url = "http://localhost:3000";
+
+  const handleAddMember = async () => {
+    try {
+      const response = await axios.post(url + "/api/teams/join", {
+        teamName: team.name, 
+        email: newMemberEmail, 
+      });
+  
+      if (response.data.success) {
+        setMessage(response.data.message); 
+        setShowAddMemberPopup(false); 
+        setNewMemberEmail("");
+        fetchTeamDetails(email); 
+      } else {
+        setMessage(response.data.message); 
+      }
+    } catch (error) {
+      setMessage("Error adding member. Please try again."); 
+    }
+  };
+  
 
   const handleLogin = async () => {
     setLoading(true);
     setMessage(""); // Reset previous messages
 
     try {
-      const response = await axios.post(url + "/api/teams/check-leader", { email });
+      const response = await axios.post(url + "/api/teams/check-leader", {
+        email,
+      });
 
       if (response.data.success) {
         if (response.data.isLeader) {
-          setMessage(`Welcome Leader! You are leading the team: ${response.data.teamName}`);
+          setMessage(
+            `Welcome Leader! You are leading the team: ${response.data.teamName}`
+          );
           setIsLeader(true);
           fetchTeamDetails(email);
         } else {
@@ -33,7 +60,9 @@ const LeaderLogin = () => {
         setMessage("Email not registered. Please check your email.");
       }
     } catch (error) {
-      setMessage("An error occurred while verifying the email. Please try again.");
+      setMessage(
+        "An error occurred while verifying the email. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -41,10 +70,12 @@ const LeaderLogin = () => {
 
   const fetchTeamDetails = async (email) => {
     try {
-      const response = await axios.get(url + "/api/teams/list", { params: { email } });
+      const response = await axios.get(url + "/api/teams/list", {
+        params: { email },
+      });
       if (response.data.success) {
         const teamData = response.data.teams[0];
-        console.log("Fetched team data:", teamData); 
+        console.log("Fetched team data:", teamData);
         setTeam(teamData);
         setVisibility(teamData.visibility);
         setDescription(teamData.description); // Set the current description of the team
@@ -117,20 +148,21 @@ const LeaderLogin = () => {
     try {
       const response = await axios.post(url + "/api/teams/leave", { email });
       if (response.data.success) {
-        setMessage(response.data.message);  
-        setTeam(null);  
+        setMessage(response.data.message);
+        setTeam(null);
       } else {
-        setMessage(response.data.message);  
+        setMessage(response.data.message);
       }
     } catch (error) {
       setMessage("Error dissolving team. Please try again.");
     } finally {
-      setShowPopup(false); 
+      setShowPopup(false);
     }
   };
 
   const handleRequestAction = async (userId, action) => {
-    const endpoint = action === "approve" ? "/approve-request" : "/reject-request";
+    const endpoint =
+      action === "approve" ? "/approve-request" : "/reject-request";
     try {
       const response = await axios.post(url + `/api/teams${endpoint}`, {
         teamId: team._id,
@@ -139,7 +171,7 @@ const LeaderLogin = () => {
       });
       if (response.data.success) {
         setMessage(response.data.message);
-        fetchTeamDetails(email); 
+        fetchTeamDetails(email);
       } else {
         setMessage(response.data.message);
       }
@@ -152,10 +184,15 @@ const LeaderLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       {!isLeader ? (
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-          <h2 className="text-3xl font-semibold text-center text-blue-600 mb-6">Leader Login</h2>
+          <h2 className="text-3xl font-semibold text-center text-blue-600 mb-6">
+            Leader Login
+          </h2>
 
           <div className="mb-4">
-            <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-lg font-medium text-gray-700 mb-2"
+            >
               Email Address
             </label>
             <input
@@ -169,7 +206,9 @@ const LeaderLogin = () => {
             />
           </div>
 
-          {message && <p className="text-center mt-4 text-gray-800">{message}</p>}
+          {message && (
+            <p className="text-center mt-4 text-gray-800">{message}</p>
+          )}
 
           <div className="mt-6">
             <button
@@ -184,14 +223,15 @@ const LeaderLogin = () => {
       ) : (
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-5xl">
           <h2 className="text-3xl font-semibold text-center text-green-600 mb-6">
-            Team: {team?.name} 
+            Team: {team?.name}
           </h2>
-          <p>
-            Description: {team?.description}
-          </p>
+          <p>Description: {team?.description}</p>
 
           <div className="mb-6">
-            <label htmlFor="visibility" className="block text-lg font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="visibility"
+              className="block text-lg font-medium text-gray-700 mb-2"
+            >
               Team Visibility
             </label>
             <select
@@ -213,7 +253,10 @@ const LeaderLogin = () => {
 
           {/* Edit Team Description Section */}
           <div className="mb-6">
-            <label htmlFor="description" className="block text-lg font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="description"
+              className="block text-lg font-medium text-gray-700 mb-2"
+            >
               Edit Team Description
             </label>
             <textarea
@@ -230,24 +273,78 @@ const LeaderLogin = () => {
               Update Description
             </button>
           </div>
+          <div className="mt-6">
+            <button
+              className="w-full bg-green-500 text-white py-3 px-4 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+              onClick={() => setShowAddMemberPopup(true)}
+            >
+              Add Member
+            </button>
+          </div>
+          {showAddMemberPopup && (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+              <div className="bg-white p-8 rounded-lg shadow-lg w-96">
+                <h2 className="text-2xl text-center text-black font-semibold mb-4">
+                  Add Team Member
+                </h2>
+                <label
+                  htmlFor="newMemberEmail"
+                  className="block text-lg font-medium text-gray-700 mb-2"
+                >
+                  Enter Member's Email
+                </label>
+                <input
+                  type="email"
+                  id="newMemberEmail"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter email"
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                />
+                <div className="flex justify-between mt-6">
+                  <button
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                    onClick={handleAddMember}
+                  >
+                    Add Member
+                  </button>
+                  <button
+                    className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
+                    onClick={() => setShowAddMemberPopup(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Team Leader Section */}
           <div className="mb-6">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Leader</h3>
             <div className="bg-white shadow-md p-4 rounded-lg border border-gray-300 mb-4">
-              <span className="font-semibold text-gray-900">{team?.leader?.name}</span>
+              <span className="font-semibold text-gray-900">
+                {team?.leader?.name}
+              </span>
             </div>
           </div>
 
           {/* Team Members Section */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Team Members</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">
+              Team Members
+            </h3>
             <ul className="bg-white shadow-md p-4 rounded-lg border border-gray-300">
               {team?.members
-                .filter(member => member._id !== team?.leader?._id)
+                .filter((member) => member._id !== team?.leader?._id)
                 .map((member, index) => (
-                  <li key={member._id} className="flex justify-between items-center border-b py-2">
-                    <span className="font-semibold text-gray-900">{index + 1}. {member.name}</span>
+                  <li
+                    key={member._id}
+                    className="flex justify-between items-center border-b py-2"
+                  >
+                    <span className="font-semibold text-gray-900">
+                      {index + 1}. {member.name}
+                    </span>
                     <button
                       className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
                       onClick={() => handleRemoveMember(member._id)}
@@ -255,21 +352,30 @@ const LeaderLogin = () => {
                       Remove
                     </button>
                   </li>
-              ))}
+                ))}
             </ul>
           </div>
 
           {/* Join Requests Section */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Join Requests</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">
+              Join Requests
+            </h3>
             <ul className="bg-white shadow-md p-4 rounded-lg border border-gray-300">
               {team?.joinRequests.map((request, index) => (
-                <li key={request._id} className="flex justify-between items-center border-b py-2">
-                  <span className="font-semibold text-gray-900">{index + 1}. {request.name}</span>
+                <li
+                  key={request._id}
+                  className="flex justify-between items-center border-b py-2"
+                >
+                  <span className="font-semibold text-gray-900">
+                    {index + 1}. {request.name}
+                  </span>
                   <div className="flex gap-2">
                     <button
                       className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600"
-                      onClick={() => handleRequestAction(request._id, "approve")}
+                      onClick={() =>
+                        handleRequestAction(request._id, "approve")
+                      }
                     >
                       Approve
                     </button>
@@ -301,8 +407,13 @@ const LeaderLogin = () => {
       {showPopup && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-            <h2 className="text-2xl text-center font-semibold mb-4">Confirm Team Dissolution</h2>
-            <p className="text-center mb-6">Are you sure you want to dissolve the team? This action cannot be undone.</p>
+            <h2 className="text-2xl text-center font-semibold mb-4">
+              Confirm Team Dissolution
+            </h2>
+            <p className="text-center mb-6">
+              Are you sure you want to dissolve the team? This action cannot be
+              undone.
+            </p>
             <div className="flex justify-between">
               <button
                 className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600"
