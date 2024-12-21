@@ -9,8 +9,8 @@ const LeaderLogin = () => {
   const [team, setTeam] = useState(null);
   const [visibility, setVisibility] = useState("");
   const [showPopup, setShowPopup] = useState(false);  // For the confirmation popup
-//   const url = "https://team-test.onrender.com";
-  const url = "http://localhost:3000";
+  const url = "https://team-test.onrender.com";
+//   const url = "http://localhost:3000";
 
   const handleLogin = async () => {
     setLoading(true);
@@ -43,7 +43,8 @@ const LeaderLogin = () => {
     try {
       const response = await axios.get(url + "/api/teams/list", { params: { email } });
       if (response.data.success) {
-        const teamData = response.data.teams[0]; // Assuming the leader has one team
+        const teamData = response.data.teams[0];
+        console.log("Fetched team data:", teamData); 
         setTeam(teamData);
         setVisibility(teamData.visibility);
       } else {
