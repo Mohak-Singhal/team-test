@@ -169,86 +169,31 @@ teamRouter.post("/create", async (req, res) => {
   }
 });
 
-// teamRouter.get("/list", async (req, res) => {
-//   const { email } = req.query; // Leader's email (optional)
-//   try {
-//     let teams = [];
-
-//     if (email) {
-//       // If a leader's email is provided, fetch all their teams
-//       const leader = await User.findOne({ email });
-//       if (!leader) {
-//         return res.json({ success: false, message: "Leader not found" });
-//       }
-
-//       // Fetch teams where the leader is the owner
-//       teams = await Team.find({ leader: leader._id })
-//         .select("description")
-//         .populate("leader", "name email")
-//         .populate("members", "name email")
-//         .populate("joinRequests", "name email");
-//     } else {
-//       // Fetch only public teams for general users
-//       teams = await Team.find({ visibility: "public" })
-//         .populate("leader", "name email")
-//     }
-
-//     return res.json({ success: true, teams });
-//   } catch (error) {
-//     return res.json({ success: false, message: "Server error", error: error.message });
-//   }
-// });
 teamRouter.get("/list", async (req, res) => {
-  const { email } = req.query; 
+  const { email } = req.query; // Leader's email (optional)
   try {
     let teams = [];
 
     if (email) {
-      const user = await User.findOne({ email }).populate("team");
-      
-      if (!user) {
-        return res.json({ success: false, message: "User not found" });
+      // If a leader's email is provided, fetch all their teams
+      const leader = await User.findOne({ email });
+      if (!leader) {
+        return res.json({ success: false, message: "Leader not found" });
       }
 
-      if (user.team) {
-        const team = await Team.findOne({ _id: user.team._id })
-          .populate("members", "name email")
-          .populate("leader", "name email");
-
-        if (!team) {
-          return res.json({ success: false, message: "Team not found" });
-        }
-
-        return res.json({
-          success: true,
-          team: {
-            name: team.name,
-            description: team.description,
-            leader: team.leader.name,
-            members: team.members.map(member => member.name),
-          }
-        });
-      } else {
-        const leader = await User.findOne({ email });
-        if (!leader) {
-          return res.json({ success: false, message: "Leader not found" });
-        }
-
-        teams = await Team.find({ leader: leader._id })
-          .select("description")
-          .populate("leader", "name email")
-          .populate("members", "name email")
-          .populate("joinRequests", "name email");
-
-        return res.json({ success: true, teams });
-      }
+      // Fetch teams where the leader is the owner
+      teams = await Team.find({ leader: leader._id })
+        .select("description")
+        .populate("leader", "name email")
+        .populate("members", "name email")
+        .populate("joinRequests", "name email");
     } else {
+      // Fetch only public teams for general users
       teams = await Team.find({ visibility: "public" })
-        .populate("leader", "name email");
-
-      return res.json({ success: true, teams });
+        .populate("leader", "name email")
     }
 
+    return res.json({ success: true, teams });
   } catch (error) {
     return res.json({ success: false, message: "Server error", error: error.message });
   }
