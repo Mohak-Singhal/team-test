@@ -4,9 +4,9 @@ const userRouter = express.Router();
 
 // Create a user
 userRouter.post("/create", async (req, res) => {
-  const { name, email } = req.body;
+  const { username, email } = req.body;
   try {
-    const user = await User.create({ name, email });
+    const user = await User.create({ username, email });
     res.status(201).json({ message: "User created successfully", user });
   } catch (error) {
     res.status(500).json({ message: "ServerError", error });

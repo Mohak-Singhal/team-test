@@ -8,10 +8,12 @@ const PublicTeams = () => {
   const [joinError, setJoinError] = useState(""); // To store any error while joining a team
   const [joinMessage, setJoinMessage] = useState(""); // To store success or failure messages for joining
   const [email, setEmail] = useState(""); // State to store the email input
-  const [teamNameToJoin, setTeamNameToJoin] = useState(""); // To store the team name for joining
+  const [teamIdToJoin, setTeamIdToJoin] = useState(""); // To store the team ID for joining
   const [isModalOpen, setIsModalOpen] = useState(false); // To handle modal visibility
-  const url = "https://team-test.onrender.com";
-// const url = 'http://localhost:3000';
+
+//   const url = "http://localhost:3000"; 
+const url = "https://team-test.onrender.com";
+
   // Fetch public teams on component mount
   useEffect(() => {
     const fetchTeams = async () => {
@@ -45,7 +47,7 @@ const PublicTeams = () => {
 
     try {
       const response = await axios.post(url + "/api/teams/request-join", {
-        teamName: teamNameToJoin, // Team name to join
+        teamId: teamIdToJoin, // Pass the team ID instead of name
         email: email, // User's email
       });
 
@@ -82,8 +84,8 @@ const PublicTeams = () => {
               key={team._id}
               className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
             >
-              <h3 className="text-xl font-semibold text-blue-600">{team.name}</h3>
-              <p className="mt-2 text-gray-600">Leader: {team.leader.name}</p>
+              <h3 className="text-xl font-semibold text-blue-600">{team.teamname}</h3>
+              <p className="mt-2 text-gray-600">Leader: {team.leader.username}</p>
               <p className="mt-2 text-gray-600">Description: {team.description}</p>
               <p className="text-gray-600">Visibility: {team.visibility}</p>
 
@@ -91,7 +93,7 @@ const PublicTeams = () => {
               <button
                 className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
                 onClick={() => {
-                  setTeamNameToJoin(team.name); // Set team name when clicked
+                  setTeamIdToJoin(team._id); // Set team ID when clicked
                   setIsModalOpen(true); // Open modal to join
                 }}
               >
@@ -114,7 +116,9 @@ const PublicTeams = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h3 className="text-xl font-semibold text-center mb-4">Join {teamNameToJoin}</h3>
+            <h3 className="text-black text-xl font-semibold text-center mb-4">
+              Join Team
+            </h3>
             <input
               type="email"
               placeholder="Enter your email"

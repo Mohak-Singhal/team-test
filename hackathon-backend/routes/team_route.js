@@ -3,8 +3,19 @@ const teamRouter = express.Router();
 const Team = require("../models/Team");
 const User = require("../models/User");
 const TeamLimit = 5
+const { 
+  sendJoinEmail,
+  sendLeaveEmail,
+  sendStatusUpdateEmail,
+  sendTeamCreationEmail,
+  sendJoinRequestEmail,
+  sendApprovalEmail,
+  sendRejectionEmail,
+  sendRemoveMemberEmail,
+  sendStatusChangeEmail 
+} = require('./maincontent.js');
 teamRouter.post("/create", async (req, res) => {
-  const { name, email,visibility } = req.body;
+  const { teamname, email,visibility } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -15,15 +26,15 @@ teamRouter.post("/create", async (req, res) => {
       return res.json({ success: false, message: "You are already in a team." });
     }
 
-    const existingTeam = await Team.findOne({ name });
+    const existingTeam = await Team.findOne({ teamname });
     if (existingTeam) {
-      return res.json({ success: false, message: "A team with this name already exists." });
+      return res.json({ success: false, message: "A team with this teamname already exists." });
     }
 
     const teamVisibility = visibility || 'private';
 
     const team = await Team.create({
-      name,
+      teamname,
       leader: user._id,
       members: [user._id],
       joinRequests: [],
@@ -32,10 +43,11 @@ teamRouter.post("/create", async (req, res) => {
 
     user.team = team._id;
     await user.save();
+    sendTeamCreationEmail(user.email, team.teamname, user.username);
 
     return res.json({ success: true, message: "Team created successfully!", team });
   } catch (error) {
-    return res.json({ success: false, message: "Server error", error: error.message });
+    return res.json({ success: false, message: `Server error:${error}`, error: error.message });
   }
 });
 
@@ -53,15 +65,15 @@ teamRouter.get("/list", async (req, res) => {
 
       // Fetch teams where the leader is the owner
       teams = await Team.find({ leader: leader._id })
-        .populate("leader", "name email")
-        .populate("members", "name email")
-        .populate("joinRequests", "name email")
-        .select("name description") 
+        .populate("leader", "username email")
+        .populate("members", "username email")
+        .populate("joinRequests", "username email")
+        .select("teamname description") 
     } else {
       // Fetch  public teams for general users
       teams = await Team.find({ visibility: "public" })
-        .populate("leader", "name email")
-        .select("name description visibility"); 
+        .populate("leader", "username email")
+        .select("teamname description visibility"); 
     }
 
     return res.json({ success: true, teams });
@@ -81,12 +93,12 @@ teamRouter.post("/join", async (req, res) => {
       return res.json({ success: false, message: "You are already in a Team" });
     }
 
-    const team = await Team.findOne({ name: teamName });
+    const team = await Team.findOne({ teamname: teamName });
     if (!team) {
       return res.json({ success: false, message: "Team not found" });
     }
     if (team.members.length >= TeamLimit) {
-      return res.json({ success: false, message: "Team is already full (TeamLimit members)." });
+      return res.json({ success: false, message: "Team is already full " });
     }
 
 
@@ -95,6 +107,7 @@ teamRouter.post("/join", async (req, res) => {
 
     user.team = team._id;
     await user.save();
+    sendJoinEmail(email)
 
     return res.json({ success: true, message: "Joined team successfully", team });
   } catch (error) {
@@ -103,7 +116,7 @@ teamRouter.post("/join", async (req, res) => {
 });
 
 teamRouter.post("/request-join", async (req, res) => {
-  const { teamName, email } = req.body;
+  const { teamId, email } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) {
@@ -113,10 +126,11 @@ teamRouter.post("/request-join", async (req, res) => {
       return res.json({ success: false, message: "You are already in a Team" });
     }
 
-    const team = await Team.findOne({ name: teamName });
+    const team = await Team.findOne({ _id: teamId });
     if (!team) {
       return res.json({ success: false, message: "Team not found" });
     }
+
     if (team.visibility === "private") {
       return res.json({ success: false, message: "This team is private. You cannot send a join request." });
     }
@@ -131,6 +145,7 @@ teamRouter.post("/request-join", async (req, res) => {
 
     team.joinRequests.push(user._id);
     await team.save();
+    sendJoinRequestEmail(email)
 
     return res.json({ success: true, message: "Join request sent successfully", team });
   } catch (error) {
@@ -149,12 +164,12 @@ teamRouter.post("/check-leader", async (req, res) => {
 
     const team = await Team.findOne({ leader: user._id });
     if (team) {
-      return res.json({ success: true, isLeader: true, teamName: team.name });
+      return res.json({ success: true, isLeader: true, teamName: team.teamname });
     } else {
       return res.json({ success: true, isLeader: false });
     }
   } catch (error) {
-    return res.status(TeamLimit00).json({ success: false, message: "Server error", error: error.message });
+    return res.json({ success: false, message: "Server error", error: error.message });
   }
 });
 
@@ -173,8 +188,8 @@ teamRouter.get("/user-team", async (req, res) => {
     }
 
     const team = await Team.findOne({ _id: user.team._id })
-      .populate("members", "name email")
-      .populate("leader", "name email");
+      .populate("members", "username email")
+      .populate("leader", "username email");
 
     if (!team) {
       return res.json({ success: false, message: "Team not found" });
@@ -183,10 +198,10 @@ teamRouter.get("/user-team", async (req, res) => {
     return res.json({
       success: true,
       team: {
-        name: team.name,
+        name: team.teamname,
         description: team.description,
         leader: team.leader,
-        members: team.members.map(member => member.name),
+        members: team.members.map(member => member.username),
       },
     });
 
@@ -219,6 +234,7 @@ teamRouter.post("/update-visibility", async (req, res) => {
 
     team.visibility = visibility;
     await team.save();
+    sendStatusChangeEmail(leaderEmail,visibility)
 
     return res.json({
       success: true,
@@ -259,6 +275,7 @@ teamRouter.post("/approve-request", async (req, res) => {
     user.team = team._id;
     await user.save();
     await team.save();
+    sendApprovalEmail(leaderEmail,team.teamname)
 
     return res.json({ success: true, message: "Member approved successfully", team });
   } catch (error) {
@@ -286,6 +303,7 @@ teamRouter.post("/reject-request", async (req, res) => {
 
     team.joinRequests.splice(userIndex, 1);
     await team.save();
+    sendRejectionEmail(leaderEmail,team.teamname)
 
     return res.json({ success: true, message: "Join request rejected", team });
   } catch (error) {
@@ -317,6 +335,7 @@ teamRouter.post("/remove-member", async (req, res) => {
     user.team = null;
     await user.save();
     await team.save();
+    sendRemoveMemberEmail(leaderEmail,team.teamname)
 
     return res.json({ success: true, message: "Member removed successfully", team });
   } catch (error) {
@@ -349,6 +368,7 @@ teamRouter.post("/leave", async (req, res) => {
       await team.deleteOne();
       user.team = null;
       await user.save();
+      sendLeaveEmail(email)
       return res.json({ success: true, message: "You left and Your Team is Collapsed" });
     }
 
@@ -356,6 +376,7 @@ teamRouter.post("/leave", async (req, res) => {
     await team.save();
     user.team = null;
     await user.save();
+    sendLeaveEmail(email)
     return res.json({ success: true, message: "You left the Team Successfully" });
   } catch (error) {
     return res.json({ success: false, message: `ServerError ${error}`, error: error.message });
@@ -382,6 +403,8 @@ teamRouter.post("/update-description", async (req, res) => {
 
     team.description = description;
     await team.save();
+    sendStatusUpdateEmail(leaderEmail,"description updated")
+
 
     return res.json({ success: true, message: "Description updated successfully" });
   } catch (error) {
@@ -390,7 +413,3 @@ teamRouter.post("/update-description", async (req, res) => {
 });
 
 module.exports = teamRouter;
-
-
-
-

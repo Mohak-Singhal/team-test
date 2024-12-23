@@ -9,7 +9,7 @@ const TeamDetails = () => {
   const [showLeavePopup, setShowLeavePopup] = useState(false);
 
   // API URL
-//   const url = 'http://localhost:3000/api'; 
+//   const url = 'http://localhost:3000'; 
    const url = 'https://team-test.onrender.com'; 
 
 
@@ -94,14 +94,14 @@ const TeamDetails = () => {
         {team && (
           <div className="mt-8">
             <div className="bg-gray-100 p-6 rounded-lg shadow-sm">
-              <h3 className="text-2xl font-semibold text-gray-800">Team: {team.name}</h3>
+              <h3 className="text-2xl font-semibold text-gray-800">Team: {team.teamname}</h3>
               <p className="text-gray-600 mt-2">{team.description}</p>
 
               {/* Leader Info */}
               {team.leader && (
                 <div className="mt-6 bg-white p-4 rounded-lg shadow-md">
                   <h4 className="text-xl font-semibold text-gray-800">Leader:</h4>
-                  <p className="text-gray-700">{team.leader.name}</p>
+                  <p className="text-gray-700">{team.leader.username}</p>
                   <p className="text-gray-500 text-sm">{team.leader.email}</p>
                 </div>
               )}

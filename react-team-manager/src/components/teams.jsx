@@ -4,13 +4,14 @@ import axios from "axios";
 const Teams = () => {
   const [showForm, setShowForm] = useState(false);
   const [teamData, setTeamData] = useState({
-    name: "",
+    teamname: "",
     email: "",
     visibility: "private", // Default visibility is private
   });
   const [message, setMessage] = useState(""); // To store success/error message
   const [createdTeam, setCreatedTeam] = useState(null); // To store created team
-  const url ='https://team-test.onrender.com'
+//   const url = "http://localhost:3000";
+const url = "https://team-test.onrender.com";
 
   // Handle input changes
   const handleChange = (e) => {
@@ -27,7 +28,7 @@ const Teams = () => {
     try {
       // Make a POST request to create a team
       const response = await axios.post(
-        url+"/api/teams/create", 
+        `${url}/api/teams/create`, 
         teamData
       );
 
@@ -37,7 +38,7 @@ const Teams = () => {
         setCreatedTeam(response.data.team); // Store created team details
         setShowForm(false); // Hide form after success
         setTeamData({
-          name: "",
+          teamname: "",
           email: "",
           visibility: "private", // Reset visibility
         });
@@ -62,7 +63,7 @@ const Teams = () => {
       {createdTeam && (
         <div className="bg-green-100 text-green-800 p-4 rounded-lg mb-6">
           <p className="text-lg">
-            Team '{createdTeam.name}' has been created successfully!
+            Team '{createdTeam.teamname}' has been created successfully!
           </p>
         </div>
       )}
@@ -83,14 +84,14 @@ const Teams = () => {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="teamname" className="block text-sm font-medium text-gray-700">
                 Team Name:
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={teamData.name}
+                id="teamname"
+                name="teamname"
+                value={teamData.teamname}
                 onChange={handleChange}
                 required
                 className="w-full mt-2 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

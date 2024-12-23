@@ -13,13 +13,13 @@ const LeaderLogin = () => {
   const [showAddMemberPopup, setShowAddMemberPopup] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
 
-  //   const url = "https://team-test.onrender.com";
-  const url = "http://localhost:3000";
+    const url = "https://team-test.onrender.com";
+//   const url = "http://localhost:3000";
 
   const handleAddMember = async () => {
     try {
       const response = await axios.post(url + "/api/teams/join", {
-        teamName: team.name, 
+        teamName: team.teamname, 
         email: newMemberEmail, 
       });
   
@@ -223,7 +223,7 @@ const LeaderLogin = () => {
       ) : (
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-5xl">
           <h2 className="text-3xl font-semibold text-center text-green-600 mb-6">
-            Team: {team?.name}
+            Team: {team?.teamname}
           </h2>
           <p>Description: {team?.description}</p>
 
@@ -324,7 +324,7 @@ const LeaderLogin = () => {
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Leader</h3>
             <div className="bg-white shadow-md p-4 rounded-lg border border-gray-300 mb-4">
               <span className="font-semibold text-gray-900">
-                {team?.leader?.name}
+                {team?.leader?.username}
               </span>
             </div>
           </div>
@@ -343,7 +343,7 @@ const LeaderLogin = () => {
                     className="flex justify-between items-center border-b py-2"
                   >
                     <span className="font-semibold text-gray-900">
-                      {index + 1}. {member.name}
+                      {index + 1}. {member.username}
                     </span>
                     <button
                       className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
@@ -368,7 +368,7 @@ const LeaderLogin = () => {
                   className="flex justify-between items-center border-b py-2"
                 >
                   <span className="font-semibold text-gray-900">
-                    {index + 1}. {request.name}
+                    {index + 1}. {request.username}
                   </span>
                   <div className="flex gap-2">
                     <button

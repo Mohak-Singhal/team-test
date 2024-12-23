@@ -4,12 +4,13 @@ import axios from "axios";
 const CreateUser = () => {
   const [showForm, setShowForm] = useState(false);
   const [userData, setUserData] = useState({
-    name: "",
+    username: "",
     email: "",
   });
   const [message, setMessage] = useState(""); // To store success/error message
   const [createdUser, setCreatedUser] = useState(null); // To store created user
   const url ='https://team-test.onrender.com'
+//   const url = "http://localhost:3000";
 
   // Handle input changes
   const handleChange = (e) => {
@@ -26,7 +27,7 @@ const CreateUser = () => {
     try {
       // Make a POST request to create a user
       const response = await axios.post(
-        url+"/api/users/create",
+        url + "/api/users/create",
         userData
       );
 
@@ -36,7 +37,7 @@ const CreateUser = () => {
         setCreatedUser(response.data.user); // Store created user details
         setShowForm(false); // Hide form after success
         setUserData({
-          name: "",
+          username: "",
           email: "",
         });
       } else {
@@ -59,7 +60,7 @@ const CreateUser = () => {
       {/* Show success message after user creation */}
       {createdUser && (
         <div className="mt-6 p-4 bg-green-200 text-green-800 rounded-lg shadow-md">
-          <p>User '{createdUser.name}' has been created successfully!</p>
+          <p>User '{createdUser.username}' has been created successfully!</p>
         </div>
       )}
 
@@ -71,7 +72,9 @@ const CreateUser = () => {
           {message && (
             <div
               className={`p-4 rounded-lg mb-4 ${
-                message.includes("success") ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                message.includes("success")
+                  ? "bg-green-200 text-green-800"
+                  : "bg-red-200 text-red-800"
               }`}
             >
               <p>{message}</p>
@@ -81,16 +84,16 @@ const CreateUser = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
-                htmlFor="name"
+                htmlFor="username"
                 className="block text-lg font-semibold text-gray-700"
               >
                 User Name
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={userData.name}
+                id="username"
+                name="username" // Corrected from "name" to "username"
+                value={userData.username}
                 onChange={handleChange}
                 required
                 className="mt-2 p-3 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
